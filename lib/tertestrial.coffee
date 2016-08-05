@@ -75,4 +75,4 @@ module.exports =
 
   toggleAutoTest: ->
     @autoTest = !@autoTest
-    atom.notifications.addInfo "autoRepeat is #{if @autoTest then 'on' else 'off'}"
+    atom.notifications.addInfo "auto test is #{if @autoTest then 'on' else 'off'}"
