@@ -13,4 +13,4 @@ All of the following commands are under the `atom-workspace` selector.
 |`tertestrial:repeat-last-test`|re-run the last test|
 |`tertestrial:toggle-auto-test`|activate/deactivate auto-running the last test on any file save|
 
-You may want to use keyboard shortcuts for triggering the above commands. This package does not provide keyboard shortcuts by default, but you can easily [define your own](http://flight-manual.atom.io/using-atom/sections/basic-customization/#customizing-keybindings)
+This package does not provide keyboard shortcuts by default, but you can easily [define your own](http://flight-manual.atom.io/using-atom/sections/basic-customization/#customizing-keybindings)
