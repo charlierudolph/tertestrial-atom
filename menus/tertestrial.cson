@@ -1,0 +1,16 @@
+menu: [
+  {
+    label: "Packages"
+    submenu: [
+      {
+        label: "tertestrial"
+        submenu: [
+          { label: "Test File", command: "tertestrial:test-file" }
+          { label: "Test Line", command: "tertestrial:test-line" }
+          { label: "Repeat Last Test", command: "tertestrial:repeat-last-test" }
+          { label: "Toggle Auto Test", command: "tertestrial:toggle-auto-test" }
+        ]
+      }
+    ]
+  }
+]
