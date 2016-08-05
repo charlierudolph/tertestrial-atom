@@ -68,7 +68,7 @@ module.exports =
 
   repeatLastTest: ->
     command = operation: 'repeatLastTest'
-    message = if @autoTest then '' else 'repeating last test'
+    message = 'repeating last test'
     @sendCommand {command, message}
 
 
