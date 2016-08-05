@@ -8,8 +8,7 @@
       "tertestrial:test-file",
       "tertestrial:test-line",
       "tertestrial:repeat-last-test",
-      "tertestrial:toggle-auto-repeat",
-      "tertestrial:set-action-set"
+      "tertestrial:toggle-auto-repeat"
     ]
   },
   "repository": "https://github.com/charlierudolph/tertestrial-atom",
