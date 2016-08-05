@@ -3,7 +3,7 @@ menu: [
     label: "Packages"
     submenu: [
       {
-        label: "tertestrial"
+        label: "Tertestrial"
         submenu: [
           { label: "Test File", command: "tertestrial:test-file" }
           { label: "Test Line", command: "tertestrial:test-line" }

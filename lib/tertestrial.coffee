@@ -1,4 +1,6 @@
 {CompositeDisposable} = require 'atom'
+fs = require 'fs'
+path = require 'path'
 
 module.exports =
   activate: ->
@@ -7,9 +9,15 @@ module.exports =
     @subscriptions.add atom.workspace.observeTextEditors (editor) => @handleEvents(editor)
     @subscriptions.add atom.commands.add 'atom-workspace',
       'tertestrial:test-file': =>
-        @testFile(editor) if editor = atom.workspace.getActiveTextEditor()
+        if editor = atom.workspace.getActiveTextEditor()
+          @testFile(editor)
+        else
+          @notify "no file open", error: true
       'tertestrial:test-line': =>
-        @testLine(editor) if editor = atom.workspace.getActiveTextEditor()
+        if editor = atom.workspace.getActiveTextEditor()
+          @testLine editor
+        else
+          @notify "no file open", error: true
       'tertestrial:repeat-last-test': =>
         @repeatLastTest()
       'tertestrial:toggle-auto-test': =>
@@ -35,44 +43,52 @@ module.exports =
     @subscriptions.add(editorDestroyedSubscription)
 
 
+  notify: (message, {error} = {}) ->
+    prefixedMessage = "Tertestrial: #{message}"
+    if error
+      atom.notifications.addError prefixedMessage
+    else
+      atom.notifications.addInfo prefixedMessage
+
+
   testFile: (editor) ->
     filename = editor.getPath()
     command = {filename}
     message = "testing file #{filename}"
-    @sendCommand command, message
+    @sendCommand {command, message}
 
 
   testLine: (editor) ->
     filename = editor.getPath()
-    line = editor.getCursorBufferPosition().row
+    line = editor.getCursorBufferPosition().row + 1
     command = {filename, line}
     message = "testing file #{filename} at line #{line}"
-    @sendCommand command, message
+    @sendCommand {command, message}
 
 
   repeatLastTest: ->
     command = operation: 'repeatLastTest'
     message = if @autoTest then '' else 'repeating last test'
-    @sendCommand command, message
+    @sendCommand {command, message}
 
 
-  sendCommand: (command, message) ->
-    if @rootDirectories.length !== 1
-      atom.notifications.addError "tertestrial requires a single root directory"
+  sendCommand: ({command, message}) ->
+    if atom.project.rootDirectories.length isnt 1
+      atom.notifications.addError "Tertestrial: requires a single root directory"
     else
-      projectPath = @rootDirectories[0].getPath()
+      projectPath = atom.project.rootDirectories[0].getPath()
       pipeFile = path.join projectPath, '.tertestrial.tmp'
-      fs.access pipeFile, (err) ->
+      fs.access pipeFile, (err) =>
         if err
-          atom.notifications.addError "tertestrial server is not running"
+          @notify "server is not running", error: true
         else
-          fs.appendFile pipeFile, JSON.stringify(command), (err) ->
+          fs.appendFile pipeFile, JSON.stringify(command), (err) =>
             if err
-              atom.notifications.addError "error writing to tertestrial pipe"
+              @notify "error writing to pipe: #{err}", error: true
             else
-              atom.notifications.addInfo message
+              @notify message
 
 
   toggleAutoTest: ->
     @autoTest = !@autoTest
-    atom.notifications.addInfo "auto test is #{if @autoTest then 'on' else 'off'}"
+    @notify "auto test is #{if @autoTest then 'on' else 'off'}"
