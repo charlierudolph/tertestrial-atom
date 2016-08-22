@@ -29,18 +29,17 @@ module.exports =
 
 
   handleEvents: (editor) ->
-    buffer = editor.getBuffer()
-    bufferSavedSubscription = buffer.onWillSave =>
-      buffer.transact => @repeatLastTest(editor) if @autoTest
+    editorSavedDisposable = editor.onDidSave =>
+      @repeatLastTest() if @autoTest
 
-    editorDestroyedSubscription = editor.onDidDestroy =>
-      bufferSavedSubscription.dispose()
-      editorDestroyedSubscription.dispose()
-      @subscriptions.remove(bufferSavedSubscription)
-      @subscriptions.remove(editorDestroyedSubscription)
+    editorDestroyedDisposable = editor.onDidDestroy =>
+      editorSavedDisposable.dispose()
+      editorDestroyedDisposable.dispose()
+      @subscriptions.remove editorSavedDisposable
+      @subscriptions.remove editorDestroyedDisposable
 
-    @subscriptions.add(bufferSavedSubscription)
-    @subscriptions.add(editorDestroyedSubscription)
+    @subscriptions.add editorSavedDisposable
+    @subscriptions.add editorDestroyedDisposable
 
 
   notify: (message, {error} = {}) ->
@@ -67,7 +66,7 @@ module.exports =
 
 
   repeatLastTest: ->
-    command = operation: 'repeatLastTest'
+    command = repeatLastTest: true
     message = 'repeating last test'
     @sendCommand {command, message}
 
