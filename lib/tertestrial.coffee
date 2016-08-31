@@ -1,10 +1,13 @@
 {CompositeDisposable} = require 'atom'
 fs = require 'fs'
 path = require 'path'
+UpdateActionSetView = require './update_action_set_view'
+
 
 module.exports =
   activate: ->
     @autoTest = false
+    @updateActionSetView = new UpdateActionSetView (actionSet) => @onUpdateActionSet(actionSet)
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.workspace.observeTextEditors (editor) => @handleEvents(editor)
     @subscriptions.add atom.commands.add 'atom-workspace',
@@ -22,6 +25,8 @@ module.exports =
         @repeatLastTest()
       'tertestrial:toggle-auto-test': =>
         @toggleAutoTest()
+      'tertestrial:update-action-set': =>
+        @updateActionSetView.toggle()
 
 
   deactivate: ->
@@ -50,18 +55,9 @@ module.exports =
       atom.notifications.addInfo prefixedMessage
 
 
-  testFile: (editor) ->
-    filename = editor.getPath()
-    command = {filename}
-    message = "testing file #{filename}"
-    @sendCommand {command, message}
-
-
-  testLine: (editor) ->
-    filename = editor.getPath()
-    line = editor.getCursorBufferPosition().row + 1
-    command = {filename, line}
-    message = "testing file #{filename} at line #{line}"
+  onUpdateActionSet: (actionSet) ->
+    command = {actionSet}
+    message = "updating action set to #{actionSet}"
     @sendCommand {command, message}
 
 
@@ -86,6 +82,21 @@ module.exports =
               @notify "error writing to pipe: #{err}", error: true
             else
               @notify message
+
+
+  testFile: (editor) ->
+    filename = editor.getPath()
+    command = {filename}
+    message = "testing file #{filename}"
+    @sendCommand {command, message}
+
+
+  testLine: (editor) ->
+    filename = editor.getPath()
+    line = editor.getCursorBufferPosition().row + 1
+    command = {filename, line}
+    message = "testing file #{filename} at line #{line}"
+    @sendCommand {command, message}
 
 
   toggleAutoTest: ->
