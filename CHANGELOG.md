@@ -1,3 +1,7 @@
+## 0.3.0
+
+* Add `tertestrial:update-action-set` command
+
 ## 0.2.0
 
 * Support tertestrial 0.1
