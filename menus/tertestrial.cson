@@ -9,6 +9,7 @@ menu: [
           { label: "Test Line", command: "tertestrial:test-line" }
           { label: "Repeat Last Test", command: "tertestrial:repeat-last-test" }
           { label: "Toggle Auto Test", command: "tertestrial:toggle-auto-test" }
+          { label: "Cycle Action Set", command: "tertestrial:cycle-action-set" }
           { label: "Update Action Set", command: "tertestrial:update-action-set" }
         ]
       }

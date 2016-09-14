@@ -25,8 +25,16 @@ module.exports =
         @repeatLastTest()
       'tertestrial:toggle-auto-test': =>
         @toggleAutoTest()
+      'tertestrial:cycle-action-set': =>
+        @cycleActionSet()
       'tertestrial:update-action-set': =>
         @updateActionSetView.toggle()
+
+
+  cycleActionSet: ->
+    command = cycleActionSet: 'next'
+    message = 'cycling to the next action set'
+    @sendCommand {command, message}
 
 
   deactivate: ->

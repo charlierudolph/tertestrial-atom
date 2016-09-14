@@ -8,6 +8,7 @@ All of the following commands are under the `atom-workspace` selector.
 
 |Command|Description|
 |-------|-----------|
+|`tertestrial:cycle-action-set`|cycle through the action sets|
 |`tertestrial:repeat-last-test`|re-run the last test|
 |`tertestrial:test-file`|run the entire test file|
 |`tertestrial:test-line`|run only the test at the current cursor position|

@@ -1,3 +1,7 @@
+## 0.4.0
+
+* Add `tertestrial:cycle-action-set` command
+
 ## 0.3.0
 
 * Add `tertestrial:update-action-set` command
