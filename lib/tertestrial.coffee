@@ -77,7 +77,7 @@ module.exports =
 
   sendCommand: ({command, message}) ->
     if atom.project.rootDirectories.length isnt 1
-      atom.notifications.addError "Tertestrial: requires a single root directory"
+      @notify 'requires a single root directory', error: true
     else
       projectPath = atom.project.rootDirectories[0].getPath()
       pipeFile = path.join projectPath, '.tertestrial.tmp'
