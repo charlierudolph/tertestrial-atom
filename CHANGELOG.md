@@ -1,3 +1,8 @@
+## 0.4.1
+
+* shorten notification messages
+* write newline after each JSON command
+
 ## 0.4.0
 
 * Add `tertestrial:cycle-action-set` command
