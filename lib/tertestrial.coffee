@@ -96,7 +96,7 @@ module.exports =
   testFile: (editor) ->
     filename = editor.getPath()
     command = {filename}
-    message = "testing file #{filename}"
+    message = "testing current file"
     @sendCommand {command, message}
 
 
@@ -104,7 +104,7 @@ module.exports =
     filename = editor.getPath()
     line = editor.getCursorBufferPosition().row + 1
     command = {filename, line}
-    message = "testing file #{filename} at line #{line}"
+    message = "testing current file at line #{line}"
     @sendCommand {command, message}
 
 
