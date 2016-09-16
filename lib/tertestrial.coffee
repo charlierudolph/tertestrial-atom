@@ -85,7 +85,7 @@ module.exports =
         if err
           @notify "server is not running", error: true
         else
-          data = JSON.stringify(command) + '\n'
+          data = '\n' + JSON.stringify command
           fs.appendFile pipeFile, data, (err) =>
             if err
               @notify "error writing to pipe: #{err}", error: true
