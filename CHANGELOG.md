@@ -1,3 +1,9 @@
+## 0.4.2
+
+* auto test automatically disables itself if server is not running
+* remove support for `tertestrial:update-action-set` command
+* update notification messages
+
 ## 0.4.1
 
 * shorten notification messages

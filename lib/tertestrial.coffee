@@ -1,13 +1,12 @@
 {CompositeDisposable} = require 'atom'
+camelCase = require 'camel-case'
 fs = require 'fs'
 path = require 'path'
-UpdateActionSetView = require './update_action_set_view'
 
 
 module.exports =
   activate: ->
     @autoTest = false
-    @updateActionSetView = new UpdateActionSetView (actionSet) => @onUpdateActionSet(actionSet)
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.workspace.observeTextEditors (editor) => @handleEvents(editor)
     @subscriptions.add atom.commands.add 'atom-workspace',
@@ -15,20 +14,18 @@ module.exports =
         if editor = atom.workspace.getActiveTextEditor()
           @testFile(editor)
         else
-          @notify "no file open", error: true
+          @notify "no file open", 'error'
       'tertestrial:test-line': =>
         if editor = atom.workspace.getActiveTextEditor()
           @testLine editor
         else
-          @notify "no file open", error: true
+          @notify "no file open", 'error'
       'tertestrial:repeat-last-test': =>
         @repeatLastTest()
       'tertestrial:toggle-auto-test': =>
         @toggleAutoTest()
       'tertestrial:cycle-action-set': =>
         @cycleActionSet()
-      'tertestrial:update-action-set': =>
-        @updateActionSetView.toggle()
 
 
   cycleActionSet: ->
@@ -43,7 +40,7 @@ module.exports =
 
   handleEvents: (editor) ->
     editorSavedDisposable = editor.onDidSave =>
-      @repeatLastTest() if @autoTest
+      @repeatLastTest(trigger: 'autoTest') if @autoTest
 
     editorDestroyedDisposable = editor.onDidDestroy =>
       editorSavedDisposable.dispose()
@@ -55,40 +52,36 @@ module.exports =
     @subscriptions.add editorDestroyedDisposable
 
 
-  notify: (message, {error} = {}) ->
-    prefixedMessage = "Tertestrial: #{message}"
-    if error
-      atom.notifications.addError prefixedMessage
-    else
-      atom.notifications.addInfo prefixedMessage
+  notify: (message, type = 'info') ->
+    fnName = camelCase "add_#{type}"
+    atom.notifications[fnName] "Tertestrial: #{message}"
 
 
-  onUpdateActionSet: (actionSet) ->
-    command = {actionSet}
-    message = "updating action set to #{actionSet}"
-    @sendCommand {command, message}
-
-
-  repeatLastTest: ->
+  repeatLastTest: ({trigger} = {}) ->
     command = repeatLastTest: true
     message = 'repeating last test'
-    @sendCommand {command, message}
+    message += ' (auto test)' if trigger is 'autoTest'
+    @sendCommand {command, message, trigger}
 
 
-  sendCommand: ({command, message}) ->
+  sendCommand: ({command, message, trigger}) ->
     if atom.project.rootDirectories.length isnt 1
-      @notify 'requires a single root directory', error: true
+      @notify 'requires a single root directory', 'error'
     else
       projectPath = atom.project.rootDirectories[0].getPath()
       pipeFile = path.join projectPath, '.tertestrial.tmp'
       fs.access pipeFile, (err) =>
         if err
-          @notify "server is not running", error: true
+          if trigger is 'autoTest'
+            @autoTest = false
+            @notify "server is not running, auto test disabled", 'warning'
+          else
+            @notify "server is not running", 'error'
         else
           data = '\n' + JSON.stringify command
           fs.appendFile pipeFile, data, (err) =>
             if err
-              @notify "error writing to pipe: #{err}", error: true
+              @notify "error writing to pipe: #{err}", 'error'
             else
               @notify message
 
@@ -110,4 +103,4 @@ module.exports =
 
   toggleAutoTest: ->
     @autoTest = !@autoTest
-    @notify "auto test is #{if @autoTest then 'on' else 'off'}"
+    @notify "auto test #{if @autoTest then 'enabled' else 'disabled'}"
