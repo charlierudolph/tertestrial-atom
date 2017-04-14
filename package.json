@@ -20,6 +20,8 @@
     "coffee-script": "^1.10.0"
   },
   "dependencies": {
-    "camel-case": "^3.0.0"
+    "camel-case": "^3.0.0",
+    "bluebird": "^3.5.0",
+    "path-is-inside": "^1.0.2"
   }
 }

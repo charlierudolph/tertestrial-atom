@@ -1,12 +1,19 @@
 {CompositeDisposable} = require 'atom'
+{coroutine, promisify} = require 'bluebird'
 camelCase = require 'camel-case'
 fs = require 'fs'
 path = require 'path'
+pathIsInside = require 'path-is-inside'
+
+
+fsAccess = promisify fs.access
+fsAppendFile = promisify fs.appendFile
 
 
 module.exports =
   activate: ->
     @autoTest = false
+    @lastDirectoryRunningTertestrial = null
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.workspace.observeTextEditors (editor) => @handleEvents(editor)
     @subscriptions.add atom.commands.add 'atom-workspace',
@@ -38,6 +45,21 @@ module.exports =
     @subscriptions.dispose()
 
 
+  findDirectoryRunningTertestrial: coroutine (filename) ->
+    if yield @shouldUseLastDirectoryRunningTertestrial filename
+      return @lastDirectoryRunningTertestrial
+    rootDirectories = atom.project.rootDirectories.map (x) -> x.getPath()
+    directory = if filename then path.dirname(filename) else rootDirectories[0]
+    loop
+      if yield @isTertestrialRunningInDirectory directory
+        return directory
+      else if directory in rootDirectories
+        break
+      else
+        directory = path.dirname directory
+    throw Error 'No directory found'
+
+
   handleEvents: (editor) ->
     editorSavedDisposable = editor.onDidSave =>
       @repeatLastTest(trigger: 'autoTest') if @autoTest
@@ -52,6 +74,15 @@ module.exports =
     @subscriptions.add editorDestroyedDisposable
 
 
+  isTertestrialRunningInDirectory: coroutine (directory) ->
+    pipeFile = path.join directory, '.tertestrial.tmp'
+    try
+      yield fsAccess pipeFile
+    catch err
+      return false
+    true
+
+
   notify: (message, type = 'info') ->
     fnName = camelCase "add_#{type}"
     atom.notifications[fnName] "Tertestrial: #{message}"
@@ -64,33 +95,40 @@ module.exports =
     @sendCommand {command, message, trigger}
 
 
-  sendCommand: ({command, message, trigger}) ->
-    if atom.project.rootDirectories.length isnt 1
-      @notify 'requires a single root directory', 'error'
-    else
-      projectPath = atom.project.rootDirectories[0].getPath()
-      pipeFile = path.join projectPath, '.tertestrial.tmp'
-      fs.access pipeFile, (err) =>
-        if err
-          if trigger is 'autoTest'
-            @autoTest = false
-            @notify "server is not running, auto test disabled", 'warning'
-          else
-            @notify "server is not running", 'error'
-        else
-          data = '\n' + JSON.stringify command
-          fs.appendFile pipeFile, data, (err) =>
-            if err
-              @notify "error writing to pipe: #{err}", 'error'
-            else
-              @notify message
+  sendCommand: coroutine ({command, filename, message, trigger}) ->
+    try
+      @lastDirectoryRunningTertestrial = yield @findDirectoryRunningTertestrial filename
+    catch err
+      @lastDirectoryRunningTertestrial = null
+      message = 'could not find running tertestrial server'
+      type = 'error'
+      if trigger is 'autoTest'
+        @autoTest = false
+        message += ', auto test disabled'
+        type = 'warning'
+      @notify message, type
+      return
+    pipeFile = path.join @lastDirectoryRunningTertestrial, '.tertestrial.tmp'
+    data = '\n' + JSON.stringify command
+    try
+      yield fsAppendFile pipeFile, data
+    catch err
+      @notify "error writing to pipe: #{err}", 'error'
+      return
+    @notify message
+
+
+  shouldUseLastDirectoryRunningTertestrial: coroutine (filename) ->
+    @lastDirectoryRunningTertestrial and
+      (not filename or pathIsInside(filename, @lastDirectoryRunningTertestrial)) and
+      yield @isTertestrialRunningInDirectory @lastDirectoryRunningTertestrial
 
 
   testFile: (editor) ->
     filename = editor.getPath()
     command = {filename}
     message = "testing current file"
-    @sendCommand {command, message}
+    @sendCommand {command, filename, message}
 
 
   testLine: (editor) ->
@@ -98,7 +136,7 @@ module.exports =
     line = editor.getCursorBufferPosition().row + 1
     command = {filename, line}
     message = "testing current file at line #{line}"
-    @sendCommand {command, message}
+    @sendCommand {command, filename, message}
 
 
   toggleAutoTest: ->
